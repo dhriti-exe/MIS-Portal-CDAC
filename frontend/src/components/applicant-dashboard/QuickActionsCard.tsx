@@ -9,10 +9,10 @@ export default function QuickActionsCard({ hasCertificate }: QuickActionsCardPro
   const actions = [
     {
       id: 'apply',
-      label: 'Apply to Enrollment',
+      label: 'Apply to Session',
       icon: Plus,
       onClick: () => {
-        console.log('Apply to enrollment')
+        console.log('Apply to session')
       },
       variant: 'primary' as const,
     },

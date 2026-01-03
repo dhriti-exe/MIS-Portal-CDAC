@@ -45,3 +45,4 @@ uploads/
 # Logs
 *.log
 
+node_modules/

@@ -9,11 +9,15 @@ from app.models.state import State
 from app.models.district import District
 from app.models.college import College
 from app.models.caste import Caste
+from app.models.qualification import Qualification
+from app.models.stream import Stream
 from app.schemas.master_data import (
     StateResponse,
     DistrictResponse,
     CollegeResponse,
     CasteResponse,
+    QualificationResponse,
+    StreamResponse,
 )
 
 router = APIRouter()
@@ -63,4 +67,20 @@ async def get_castes(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Caste).order_by(Caste.caste_name))
     castes = result.scalars().all()
     return castes
+
+
+@router.get("/qualifications", response_model=List[QualificationResponse])
+async def get_qualifications(db: AsyncSession = Depends(get_db)):
+    """Get all qualifications"""
+    result = await db.execute(select(Qualification).order_by(Qualification.qualification_name))
+    qualifications = result.scalars().all()
+    return qualifications
+
+
+@router.get("/streams", response_model=List[StreamResponse])
+async def get_streams(db: AsyncSession = Depends(get_db)):
+    """Get all streams"""
+    result = await db.execute(select(Stream).order_by(Stream.stream_name))
+    streams = result.scalars().all()
+    return streams
 

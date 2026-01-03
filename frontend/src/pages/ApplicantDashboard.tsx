@@ -7,10 +7,10 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { applicantAPI, Application, Enrollment, NewsItem, ApplicantProfile } from '../api/applicant'
+import { applicantAPI, Application, NewsItem, ApplicantProfile, Session } from '../api/applicant'
 import DashboardSidebar, { DashboardSection } from '../components/applicant-dashboard/DashboardSidebar'
 import ApplicationsCard from '../components/applicant-dashboard/ApplicationsCard'
-import EnrollmentsCard from '../components/applicant-dashboard/EnrollmentsCard'
+import SessionsCard from '../components/applicant-dashboard/SessionsCard'
 import NewsCard from '../components/applicant-dashboard/NewsCard'
 import NotificationsCard from '../components/applicant-dashboard/NotificationsCard'
 import ProfileSection from '../components/applicant-dashboard/ProfileSection'
@@ -21,7 +21,7 @@ export default function ApplicantDashboard() {
   const [activeSection, setActiveSection] = useState<DashboardSection>('applications')
   const [loading, setLoading] = useState(true)
   const [applications, setApplications] = useState<Application[]>([])
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([])
+  const [sessions, setSessions] = useState<Session[]>([])
   const [news, setNews] = useState<NewsItem[]>([])
   const [profile, setProfile] = useState<ApplicantProfile | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -37,21 +37,21 @@ export default function ApplicantDashboard() {
       setError(null)
 
       // Load all data in parallel
-      const [applicationsData, enrollmentsData, newsData, profileData] = await Promise.all([
+      const [applicationsData, sessionsData, newsData, profileData] = await Promise.all([
         applicantAPI.getApplications().catch(() => []),
-        applicantAPI.getEnrollments().catch(() => []),
+        applicantAPI.getSessions().catch(() => []),
         applicantAPI.getNews().catch(() => []),
         applicantAPI.getProfile().catch(() => null),
       ])
 
       setApplications(applicationsData)
-      setEnrollments(enrollmentsData)
+      setSessions(sessionsData)
       setNews(newsData)
       setProfile(profileData)
       
-      // If no applications, default to enrollments
+      // If no applications, default to sessions
       if (applicationsData.length === 0) {
-        setActiveSection('enrollments')
+        setActiveSection('sessions')
       }
     } catch (err) {
       console.error('Error loading dashboard data:', err)
@@ -110,8 +110,8 @@ export default function ApplicantDashboard() {
     switch (activeSection) {
       case 'applications':
         return <ApplicationsCard applications={applications} />
-      case 'enrollments':
-        return <EnrollmentsCard enrollments={enrollments} />
+      case 'sessions':
+        return <SessionsCard sessions={sessions} applications={applications} onRefresh={loadDashboardData} />
       case 'news':
         return <NewsCard news={news} />
       case 'profile':

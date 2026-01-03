@@ -31,7 +31,7 @@ export default function NotificationsCard({ applications }: NotificationsCardPro
           id: `selected-${app.application_id}`,
           type: 'success',
           title: 'Application Selected',
-          message: `Your application for "${app.enrollment_title}" has been selected!`,
+          message: `Your application for "${app.session_name}" has been selected!`,
           date: app.updated_date,
           relatedApplicationId: app.application_id,
         })
@@ -40,7 +40,7 @@ export default function NotificationsCard({ applications }: NotificationsCardPro
           id: `rejected-${app.application_id}`,
           type: 'error',
           title: 'Application Rejected',
-          message: `Your application for "${app.enrollment_title}" was not selected.`,
+          message: `Your application for "${app.session_name}" was not selected.`,
           date: app.updated_date,
           relatedApplicationId: app.application_id,
         })
@@ -52,7 +52,7 @@ export default function NotificationsCard({ applications }: NotificationsCardPro
           id: `payment-${app.application_id}`,
           type: 'warning',
           title: 'Payment Pending',
-          message: `Please complete payment for "${app.enrollment_title}" to secure your enrollment.`,
+          message: `Please complete payment for "${app.session_name}" to secure your enrollment.`,
           date: app.updated_date,
           relatedApplicationId: app.application_id,
         })
@@ -61,7 +61,7 @@ export default function NotificationsCard({ applications }: NotificationsCardPro
           id: `paid-${app.application_id}`,
           type: 'success',
           title: 'Payment Confirmed',
-          message: `Payment for "${app.enrollment_title}" has been confirmed.`,
+          message: `Payment for "${app.session_name}" has been confirmed.`,
           date: app.updated_date,
           relatedApplicationId: app.application_id,
         })
@@ -73,7 +73,7 @@ export default function NotificationsCard({ applications }: NotificationsCardPro
           id: `cert-${app.application_id}`,
           type: 'success',
           title: 'Certificate Available',
-          message: `Your certificate for "${app.enrollment_title}" is now available for download.`,
+          message: `Your certificate for "${app.session_name}" is now available for download.`,
           date: app.updated_date,
           relatedApplicationId: app.application_id,
         })
@@ -85,7 +85,7 @@ export default function NotificationsCard({ applications }: NotificationsCardPro
           id: `update-${app.application_id}`,
           type: 'info',
           title: 'Application Under Review',
-          message: `Your application for "${app.enrollment_title}" is being reviewed.`,
+          message: `Your application for "${app.session_name}" is being reviewed.`,
           date: app.updated_date,
           relatedApplicationId: app.application_id,
         })

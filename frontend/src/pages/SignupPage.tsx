@@ -53,7 +53,7 @@ export default function SignupPage() {
       // Ensure tokens are clean before storing
       const cleanAccessToken = signupResponse.access_token.trim()
       const cleanRefreshToken = signupResponse.refresh_token.trim()
-      setAuth(user, cleanAccessToken, cleanRefreshToken)
+      setAuth({ ...user, is_active: user.is_active ?? true }, cleanAccessToken, cleanRefreshToken)
 
       // Redirect based on role and profile completion
       // For applicants, go to onboarding if not completed, otherwise dashboard
@@ -61,6 +61,8 @@ export default function SignupPage() {
         navigate('/onboarding/applicant')
       } else if (user.role === 'applicant') {
         navigate('/applicant/dashboard')
+      } else if (user.role === 'centre' && !user.center_id) {
+        navigate('/onboarding/center')
       } else if (user.role === 'centre') {
         navigate('/centre/dashboard')
       } else {

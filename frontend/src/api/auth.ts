@@ -1,18 +1,33 @@
 import apiClient from './client'
+
 export interface LoginCredentials {
   email: string
   password: string
 }
+
 export interface SignupData {
   email: string
   password: string
   role: 'applicant' | 'centre' | 'admin'
 }
+
 export interface AuthResponse {
   access_token: string
   refresh_token: string
   token_type: string
 }
+
+export interface User {
+  id: number;
+  email: string;
+  role: 'applicant' | 'centre' | 'admin';
+  is_active?: boolean;
+  applicant_id?: number | null;
+  center_id?: number | null;
+  employee_id?: number | null;
+  [key: string]: any;
+}
+
 export const authAPI = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/auth/login', credentials)
@@ -46,4 +61,5 @@ export const authAPI = {
     )
     return response.data
   },
+}
 

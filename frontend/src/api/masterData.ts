@@ -25,6 +25,18 @@ export interface Caste {
   caste_name: string
 }
 
+export interface Qualification {
+  qualification_id: number
+  qualification_name: string
+  qual_code: number | null
+}
+
+export interface Stream {
+  stream_id: number
+  stream_name: string
+  qual_code: number | null
+}
+
 export const masterDataAPI = {
   getStates: async (): Promise<State[]> => {
     const response = await apiClient.get<State[]>('/master/states')
@@ -40,6 +52,14 @@ export const masterDataAPI = {
   },
   getCastes: async (): Promise<Caste[]> => {
     const response = await apiClient.get<Caste[]>('/master/castes')
+    return response.data
+  },
+  getQualifications: async (): Promise<Qualification[]> => {
+    const response = await apiClient.get<Qualification[]>('/master/qualifications')
+    return response.data
+  },
+  getStreams: async (): Promise<Stream[]> => {
+    const response = await apiClient.get<Stream[]>('/master/streams')
     return response.data
   },
 }

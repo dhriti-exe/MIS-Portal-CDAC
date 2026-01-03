@@ -1,4 +1,4 @@
-import React from 'react'
+
 
 interface StatusPillProps {
   status: string
@@ -18,6 +18,8 @@ const statusColors: Record<string, { bg: string; text: string }> = {
   upcoming: { bg: 'bg-blue-100', text: 'text-blue-800' },
   ongoing: { bg: 'bg-purple-100', text: 'text-purple-800' },
   completed: { bg: 'bg-gray-100', text: 'text-gray-800' },
+  Active: { bg: 'bg-green-100', text: 'text-green-800' },
+  Inactive: { bg: 'bg-gray-100', text: 'text-gray-800' },
 }
 
 export default function StatusPill({ status, variant, size = 'sm' }: StatusPillProps) {

@@ -42,25 +42,13 @@ export interface ApplicantCreate {
 
 export interface Application {
   application_id: number
-  enrollment_title: string
-  center_name: string
   session_name: string
+  center_name: string
   application_status: string
   payment_status: string
   certificate_status: string
   updated_date: string
   reg_id: string | null
-}
-
-export interface Enrollment {
-  enroll_id: number
-  enroll_title: string
-  enroll_desc: string
-  enroll_start_date: string
-  enroll_end_date: string
-  center_name: string
-  session_name: string
-  active_status: string
 }
 
 export interface NewsItem {
@@ -71,6 +59,27 @@ export interface NewsItem {
   start_datetime: string
   end_datetime: string
   status: string
+}
+
+export interface Session {
+  session_id: number
+  session_name: string
+  session_desc: string
+  start_date: string
+  end_date: string
+  center_id: number
+  active_status: string
+}
+
+export interface ApplicationCreate {
+  session_id: number
+  enroll_id: number;
+  qualification_id: number
+  stream_id: number
+  marks: string
+  dob_image?: string
+  marksheet_image?: string
+  role_id?: number
 }
 
 export const applicantAPI = {
@@ -90,12 +99,16 @@ export const applicantAPI = {
     const response = await apiClient.get<Application[]>('/applicant/applications')
     return response.data
   },
-  getEnrollments: async (): Promise<Enrollment[]> => {
-    const response = await apiClient.get<Enrollment[]>('/applicant/enrollments')
-    return response.data
-  },
   getNews: async (): Promise<NewsItem[]> => {
     const response = await apiClient.get<NewsItem[]>('/applicant/news')
+    return response.data
+  },
+  getSessions: async (): Promise<Session[]> => {
+    const response = await apiClient.get<Session[]>('/applicant/sessions')
+    return response.data
+  },
+  createApplication: async (data: ApplicationCreate): Promise<Application> => {
+    const response = await apiClient.post<Application>('/applicant/applications', data)
     return response.data
   },
   uploadProfilePhoto: async (file: File): Promise<ApplicantProfile> => {

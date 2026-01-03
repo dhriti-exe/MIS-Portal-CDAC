@@ -15,10 +15,11 @@ from app.db.session import get_db
 from app.models.user import User
 from app.models.applicant import Applicant
 from app.models.application import Application
-from app.models.enrollment_news import EnrollmentNews
 from app.models.news import News
 from app.models.center import Center
 from app.models.session import Session
+from app.schemas.session import SessionResponse
+from app.schemas.application import ApplicationCreate, ApplicationResponse as ApplicationResponseSchema
 from app.models.role import RoleEnum
 from app.schemas.applicant import ApplicantCreate, ApplicantUpdate, ApplicantResponse
 from app.core.auth import get_current_user, require_role
@@ -150,28 +151,13 @@ async def update_applicant_profile(
 # Response schemas for dashboard data
 class ApplicationResponse(BaseModel):
     application_id: int
-    enrollment_title: str
-    center_name: str
     session_name: str
+    center_name: str
     application_status: str
     payment_status: str
     certificate_status: str
     updated_date: datetime
     reg_id: str | None
-    
-    class Config:
-        from_attributes = True
-
-
-class EnrollmentResponse(BaseModel):
-    enroll_id: int
-    enroll_title: str
-    enroll_desc: str
-    enroll_start_date: datetime
-    enroll_end_date: datetime
-    center_name: str
-    session_name: str
-    active_status: str
     
     class Config:
         from_attributes = True
@@ -202,7 +188,6 @@ async def get_my_applications(
     result = await db.execute(
         select(Application)
         .options(
-            selectinload(Application.enrollment),
             selectinload(Application.center),
             selectinload(Application.session)
         )
@@ -221,7 +206,6 @@ async def get_my_applications(
         
         response.append(ApplicationResponse(
             application_id=app.application_id,
-            enrollment_title=app.enrollment.enroll_title if app.enrollment else "N/A",
             center_name=app.center.center_name if app.center else "N/A",
             session_name=app.session.session_name if app.session else "N/A",
             application_status=app_status_map.get(app.enrollment_status, "Pending"),
@@ -229,45 +213,6 @@ async def get_my_applications(
             certificate_status=cert_status_map.get(app.cert_status, "Not Issued"),
             updated_date=app.updated_date,
             reg_id=app.reg_id
-        ))
-    
-    return response
-
-
-@router.get("/enrollments", response_model=List[EnrollmentResponse])
-async def get_available_enrollments(
-    current_user: User = Depends(require_role(RoleEnum.APPLICANT)),
-    db: AsyncSession = Depends(get_db)
-):
-    """Get all available enrollments"""
-    # Get active enrollments
-    result = await db.execute(
-        select(EnrollmentNews)
-        .options(
-            selectinload(EnrollmentNews.center),
-            selectinload(EnrollmentNews.session)
-        )
-        .where(
-            and_(
-                EnrollmentNews.active_status == "Y",
-                EnrollmentNews.enroll_end_date >= datetime.utcnow()
-            )
-        )
-        .order_by(EnrollmentNews.enroll_start_date.desc())
-    )
-    enrollments = result.scalars().all()
-    
-    response = []
-    for enroll in enrollments:
-        response.append(EnrollmentResponse(
-            enroll_id=enroll.enroll_id,
-            enroll_title=enroll.enroll_title,
-            enroll_desc=enroll.enroll_desc,
-            enroll_start_date=enroll.enroll_start_date,
-            enroll_end_date=enroll.enroll_end_date,
-            center_name=enroll.center.center_name if enroll.center else "N/A",
-            session_name=enroll.session.session_name if enroll.session else "N/A",
-            active_status=enroll.active_status
         ))
     
     return response
@@ -309,6 +254,143 @@ async def get_news(
         ))
     
     return response
+
+
+@router.get("/sessions", response_model=List[SessionResponse])
+async def get_available_sessions(
+    current_user: User = Depends(require_role(RoleEnum.APPLICANT)),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all sessions available for applicants (both active and inactive)"""
+    # Get all sessions - applicants should see all sessions created by centers
+    result = await db.execute(
+        select(Session)
+        .options(selectinload(Session.center))
+        .order_by(Session.start_date.desc())
+    )
+    sessions = result.scalars().all()
+    
+    # For each session, find the first active enrollment/news (if any) and include its enroll_id
+    session_enroll_map = {}
+    from app.models.enrollment_news import EnrollmentNews
+    for s in sessions:
+        enroll_result = await db.execute(
+            select(EnrollmentNews).where(EnrollmentNews.session_id == s.session_id, EnrollmentNews.active_status == 'Y').order_by(EnrollmentNews.enroll_start_date.asc())
+        )
+        enrollment = enroll_result.scalars().first()
+        session_enroll_map[s.session_id] = enrollment.enroll_id if enrollment else None
+
+    return [
+        SessionResponse(
+            session_id=s.session_id,
+            session_name=s.session_name,
+            session_desc=s.session_desc,
+            start_date=s.start_date,
+            end_date=s.end_date,
+            center_id=s.center_id,
+            active_status=s.active_status,
+            enroll_id=session_enroll_map.get(s.session_id)
+        )
+        for s in sessions
+    ]
+
+
+@router.post("/applications", response_model=ApplicationResponseSchema, status_code=status.HTTP_201_CREATED)
+async def create_application(
+    application_data: ApplicationCreate,
+    current_user: User = Depends(require_role(RoleEnum.APPLICANT)),
+    db: AsyncSession = Depends(get_db)
+):
+    """Create a new application for a session"""
+    if not current_user.applicant_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Applicant profile not found. Please complete onboarding."
+        )
+    
+    # Get applicant profile
+    result = await db.execute(
+        select(Applicant).where(Applicant.applicant_id == current_user.applicant_id)
+    )
+    applicant = result.scalar_one_or_none()
+    
+    if not applicant:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Applicant profile not found"
+        )
+    
+    # Get session and verify it exists
+    session_result = await db.execute(
+        select(Session).where(Session.session_id == application_data.session_id)
+    )
+    session = session_result.scalar_one_or_none()
+    
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Session not found"
+        )
+    
+    # Check if applicant already applied to this session
+    existing_app = await db.execute(
+        select(Application).where(
+            and_(
+                Application.applicant_id == current_user.applicant_id,
+                Application.session_id == application_data.session_id
+            )
+        )
+    )
+    if existing_app.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You have already applied to this session"
+        )
+    
+    # Create application
+    new_application = Application(
+        applicant_id=current_user.applicant_id,
+        enroll_id=application_data.enroll_id,
+        session_id=application_data.session_id,
+        center_id=session.center_id,
+        applicant_email_id=applicant.email_id,
+        qualification_id=application_data.qualification_id,
+        stream_id=application_data.stream_id,
+        marks=application_data.marks,
+        dob_image=application_data.dob_image,
+        marksheet_image=application_data.marksheet_image,
+        role_id=application_data.role_id,
+        enrollment_status="N",  # Submitted
+        payment_status="N",
+        cert_status="N"
+    )
+    
+    db.add(new_application)
+    await db.commit()
+    await db.refresh(new_application)
+    
+    # Get session and center for response
+    session_result = await db.execute(
+        select(Session)
+        .options(selectinload(Session.center))
+        .where(Session.session_id == application_data.session_id)
+    )
+    session = session_result.scalar_one_or_none()
+    
+    app_status_map = {"Y": "Selected", "N": "Submitted", "R": "Rejected", "P": "Pending"}
+    payment_status_map = {"Y": "Paid", "N": "Unpaid", "P": "Pending"}
+    cert_status_map = {"Y": "Issued", "N": "Not Issued", "P": "Pending"}
+    
+    return ApplicationResponseSchema(
+        application_id=new_application.application_id,
+        session_name=session.session_name if session else "N/A",
+        center_name=session.center.center_name if session and session.center else "N/A",
+        application_status=app_status_map.get(new_application.enrollment_status, "Pending"),
+        payment_status=payment_status_map.get(new_application.payment_status, "Pending"),
+        certificate_status=cert_status_map.get(new_application.cert_status, "Not Issued"),
+        updated_date=new_application.updated_date.isoformat(),
+        reg_id=new_application.reg_id
+    )
 
 
 @router.patch("/profile/photo", response_model=ApplicantResponse)

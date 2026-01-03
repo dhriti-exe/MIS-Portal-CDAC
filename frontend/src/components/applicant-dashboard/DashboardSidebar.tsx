@@ -1,7 +1,7 @@
 import { FileText, Calendar, Newspaper, User, Bell, LogOut } from 'lucide-react'
 import { ApplicantProfile } from '../../api/applicant'
 
-export type DashboardSection = 'applications' | 'enrollments' | 'news' | 'profile' | 'notifications'
+export type DashboardSection = 'applications' | 'sessions' | 'news' | 'profile' | 'notifications'
 
 interface DashboardSidebarProps {
   activeSection: DashboardSection
@@ -12,7 +12,7 @@ interface DashboardSidebarProps {
 
 const mainMenuItems: Array<{ id: DashboardSection; label: string; icon: typeof FileText }> = [
   { id: 'applications', label: 'My Applications', icon: FileText },
-  { id: 'enrollments', label: 'Available Enrollments', icon: Calendar },
+  { id: 'sessions', label: 'Training Sessions', icon: Calendar },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'news', label: 'Latest News', icon: Newspaper },
   { id: 'profile', label: 'My Profile', icon: User },

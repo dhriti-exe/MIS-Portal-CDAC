@@ -49,11 +49,13 @@ export default function LoginPage() {
       const cleanAccessToken = response.access_token.trim()
       const cleanRefreshToken = response.refresh_token.trim()
       
-      setAuth(user, cleanAccessToken, cleanRefreshToken)
+      setAuth({ ...user, is_active: user.is_active ?? true }, cleanAccessToken, cleanRefreshToken)
 
       // Redirect based on role and profile completion
       if (user.role === 'applicant' && !user.applicant_id) {
         navigate('/onboarding/applicant')
+      } else if (user.role === 'centre' && !user.center_id) {
+        navigate('/onboarding/center')
       } else {
         navigate(`/${user.role}/dashboard`)
       }

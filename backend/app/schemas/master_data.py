@@ -44,3 +44,22 @@ class CasteResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+class QualificationResponse(BaseModel):
+    """Schema for qualification response"""
+    qualification_id: int
+    qualification_name: str
+    qual_code: int | None
+    
+    class Config:
+        from_attributes = True
+
+
+class StreamResponse(BaseModel):
+    """Schema for stream response"""
+    stream_id: int
+    stream_name: str
+    qual_code: int | None
+    
+    class Config:
+        from_attributes = True
