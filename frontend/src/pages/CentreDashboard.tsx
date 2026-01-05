@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore'
 import { centerAPI, Session, Application, NewsItem, CenterProfile } from '../api/center'
 import CentreSidebar, { CentreSection } from '../components/centre-dashboard/CentreSidebar'
 import SessionsCard from '../components/centre-dashboard/SessionsCard'
-import ApplicationsCard from '../components/centre-dashboard/ApplicationsCard'
+import { ApplicationsCard } from '../components/centre-dashboard/ApplicationsCard'
 import NewsCard from '../components/centre-dashboard/NewsCard'
 import ProfileSection from '../components/centre-dashboard/ProfileSection'
 

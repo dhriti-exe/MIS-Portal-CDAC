@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion'
+import { useState } from 'react'
 import { Users, Mail, Eye, CheckCircle2, XCircle, Clock } from 'lucide-react'
 import { Application } from '../../api/center'
+import ApplicationDetailModal from './ApplicationDetailModal'
 import EmptyState from '../applicant-dashboard/EmptyState'
 import StatusPill from '../applicant-dashboard/StatusPill'
 
@@ -8,8 +10,31 @@ interface ApplicationsCardProps {
   applications: Application[]
 }
 
-export default function ApplicationsCard({ applications }: ApplicationsCardProps) {
+export function ApplicationsCard({ applications }: ApplicationsCardProps) {
   const displayApplications = applications.slice(0, 5)
+
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+
+  const handleReview = (app: Application) => {
+    setSelectedApp(app)
+    setModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setModalOpen(false)
+    setSelectedApp(null)
+  }
+
+  // TODO: Replace with real API call
+  const handleApprove = (id: number) => {
+    alert(`Approve application ${id}`)
+    handleCloseModal()
+  }
+  const handleReject = (id: number) => {
+    alert(`Reject application ${id}`)
+    handleCloseModal()
+  }
 
 //   const formatDate = (dateString: string) => {
 //     const date = new Date(dateString)
@@ -115,9 +140,7 @@ export default function ApplicationsCard({ applications }: ApplicationsCardProps
                       <div className="flex justify-end">
                         <button
                           className="flex items-center gap-1 px-3 py-1.5 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition font-medium"
-                          onClick={() => {
-                            console.log('View application:', app.application_id)
-                          }}
+                          onClick={() => handleReview(app)}
                         >
                           <Eye className="h-4 w-4" />
                           Review
@@ -158,9 +181,7 @@ export default function ApplicationsCard({ applications }: ApplicationsCardProps
                   </div>
                   <button
                     className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition font-medium"
-                    onClick={() => {
-                      console.log('View application:', app.application_id)
-                    }}
+                    onClick={() => handleReview(app)}
                   >
                     <Eye className="h-4 w-4" />
                     Review Application
@@ -179,6 +200,13 @@ export default function ApplicationsCard({ applications }: ApplicationsCardProps
           </button>
         </div>
       )}
+      <ApplicationDetailModal
+        application={selectedApp}
+        open={modalOpen}
+        onClose={handleCloseModal}
+        onApprove={handleApprove}
+        onReject={handleReject}
+      />
     </motion.div>
   )
 }
